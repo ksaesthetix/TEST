@@ -101,8 +101,21 @@ function initWDTabs() {
   });
 }
  
-function avatarInitials(name) { return name.split(' ').map(x => x[0]).join('').slice(0, 2); }
-function avatarColor(name) { return AVATAR_COLORS[OWNERS.indexOf(name) % AVATAR_COLORS.length] || '#22A884'; }
+function normalizeOwnerName(name) {
+  if (!name) return '';
+  return name.split('/')[0].trim();
+}
+function avatarInitials(name) {
+  const normalized = normalizeOwnerName(name);
+  return normalized.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
+}
+function avatarColor(name) {
+  const normalized = normalizeOwnerName(name);
+  const index = OWNERS.indexOf(normalized);
+  if (index >= 0) return AVATAR_COLORS[index % AVATAR_COLORS.length];
+  const hash = normalized.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
  
 function statusPill(status) {
   const map = { open:'status-open', review:'status-review', done:'status-done', overdue:'status-overdue' };
@@ -174,7 +187,10 @@ function render() {
           <div class="avatar" style="background:${avatarColor(t.primaryOwner)}">${avatarInitials(t.primaryOwner)}</div>
           <span>${t.primaryOwner}</span>
         </div>
-        <div class="reviewer-pill">${t.secondaryOwner || ''}</div>
+        <div class="reviewer-pill">
+          <div class="avatar" style="background:${avatarColor(t.secondaryOwner)}">${avatarInitials(t.secondaryOwner)}</div>
+          <span>${t.secondaryOwner}</span>
+        </div>
         <div>${statusPill(t.status)}</div>
         <div class="reviewer-pill" title="${t.comments || ''}">${t.comments || ''}</div>
         <div class="actions-cell">
